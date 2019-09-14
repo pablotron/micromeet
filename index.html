@@ -8,7 +8,7 @@
 
   <body>
   <nav class='navbar navbar-expand-lg navbar-dark bg-dark'>
-    <a 
+    <a
       href='#'
       class='navbar-brand'
       title='micromeet'
@@ -17,172 +17,240 @@
 
     <div class='container' style='padding-top: 20px'>
       <div class='row'>
-        <div class='col-md-6'>
+        <div class='col-md-6 offset-md-3'>
           <div class='card'>
-            <div class='card-header'>
-              <b>
-               Settings
-              </b>
-            </div><!-- card-header -->
-
             <div class='card-body'>
-              <div class='form-group'>
-                <label for='summary'>
-                  Meeting Summary
-                </label>
+              <fieldset>
+                <legend>
+                  Details
+                </legend>
 
-                <input
-                  type='text'
-                  id='summary'
-                  class='form-control'
-                  placeholder='Important Meeting'
-                  title='Enter a meeting summary.'
-                  value=''
-                />
-              </div><!-- form-group -->
+                <div class='row'>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='summary'>
+                        Summary
+                      </label>
 
-              <div class='row'>
-                <div class='col-md-6'>
-                  <div class='form-group'>
-                    <label for='name'>
-                      Organizer Name
-                    </label>
+                      <input
+                        type='text'
+                        id='summary'
+                        class='form-control'
+                        placeholder='Important Meeting'
+                        title='Enter a brief meeting summary.'
+                        value=''
+                      />
 
-                    <input
-                      type='text'
-                      id='name'
-                      class='form-control'
-                      title='Name of meeting organizer.'
-                      placeholder='Bobby Tables'
-                      value='Bobby Tableau'
-                    />
-                  </div><!-- form-group -->
-                </div><!-- col-md-6 -->
+                      <p class='form-text text-muted'>
+                        Brief summary.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
 
-                <div class='col-md-6'>
-                  <div class='form-group'>
-                    <label for='email'>
-                      Organizer Email
-                    </label>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='freq'>
+                        Length
+                      </label>
 
-                    <input
-                      type='email'
-                      id='email'
-                      class='form-control'
-                      title='Email address of meeting organizer.'
-                      placeholder='bobby@example.com'
-                      value='bobby@example.com'
-                    />
-                  </div><!-- form-group -->
-                </div><!-- col-md-6 -->
-              </div><!-- row -->
+                      <select
+                        id='freq'
+                        class='form-control'
+                        title='Meeting length, in seconds.'
+                      >
+                        <option value='10'>10 seconds</option>
+                        <option value='20'>20 seconds</option>
+                        <option value='30' selected>30 seconds</option>
+                        <option value='40'>40 seconds</option>
+                        <option value='50'>50 seconds</option>
+                        <option value='60'>60 seconds</option>
+                      </select><!-- form-control -->
 
-              <div class='row'>
-                <div class='col-md-12'>
-                  <div class='form-group'>
-                    <label for='date'>
-                      Date
-                    </label>
+                      <p class='form-text text-muted'>
+                        Duration of individual meetings.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+                </div><!-- row -->
 
-                    <input
-                      type='date'
-                      id='date'
-                      class='form-control'
-                    />
-                  </div><!-- form-group -->
-                </div><!-- col-md-12 -->
-              </div><!-- row -->
+                <div class='row'>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='description'>
+                        Description
+                      </label>
 
-              <div class='row'>
-                <div class='col-md-6'>
-                  <div class='form-group'>
-                    <label for='min'>
-                      Start Time
-                    </label>
+                      <input
+                        type='text'
+                        id='description'
+                        class='form-control'
+                        placeholder='Description of important meeting'
+                        title='Enter a meeting description.'
+                        value=''
+                      />
 
-                    <input
-                      type='time'
-                      id='min'
-                      class='form-control'
-                      value='12:00'
-                    />
-                  </div><!-- form-group -->
-                </div><!-- col-md-6 -->
+                      <p class='form-text text-muted'>
+                        Full description of meeting.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+                </div><!-- row -->
+              </fieldset>
 
-                <div class='col-md-6'>
-                  <div class='form-group'>
-                    <label for='max'>
-                      End Time
-                    </label>
+              <fieldset>
+                <legend>
+                  Organizer
+                </legend>
 
-                    <input
-                      type='time'
-                      id='max'
-                      class='form-control'
-                      value='13:00'
-                    />
-                  </div><!-- form-group -->
-                </div><!-- col-md-6 -->
-              </div><!-- row -->
+                <div class='row'>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='name'>
+                        Name
+                      </label>
 
-              <div class='row'>
-                <div class='col-md-12'>
-                  <div class='form-group'>
-                    <label for='freq'>
-                      Frequency (in seconds)
-                    </label>
+                      <input
+                        type='text'
+                        id='name'
+                        class='form-control'
+                        title='Name of meeting organizer.'
+                        placeholder='Bobby Tables'
+                        value='Bobby Tables'
+                      />
 
-                    <input
-                      type='range'
-                      id='freq'
-                      class='form-control'
-                      title='Meeting frequency, in seconds.'
-                      value='30'
-                      min='10'
-                      max='60'
-                      step='10'
-                      list='ticks'
-                    />
+                      <p class='form-text text-muted'>
+                        Organizer name.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
 
-                    <datalist id='ticks'>
-                      <option value='10'></option>
-                      <option value='20'></option>
-                      <option value='30'></option>
-                      <option value='40'></option>
-                      <option value='50'></option>
-                      <option value='60'></option>
-                    </datalist>
-                  </div><!-- form-group -->
-                </div><!-- col-md-12 -->
-              </div><!-- row -->
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='email'>
+                        Email
+                      </label>
+
+                      <input
+                        type='email'
+                        id='email'
+                        class='form-control'
+                        title='Email address of meeting organizer.'
+                        placeholder='bobby@example.com'
+                        value='bobby@example.com'
+                      />
+
+                      <p class='form-text text-muted'>
+                        Organizer email address.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+                </div><!-- row -->
+              </fieldset>
+
+              <fieldset>
+                <legend>
+                  Schedule
+                </legend>
+
+                <div class='row'>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='date'>
+                        Date
+                      </label>
+
+                      <input
+                        type='date'
+                        id='date'
+                        class='form-control'
+                      />
+
+                      <p class='form-text text-muted'>
+                        Meeting date.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+                </div><!-- row -->
+
+                <div class='row'>
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='min'>
+                        Start Time
+                      </label>
+
+                      <input
+                        type='time'
+                        id='min'
+                        class='form-control'
+                        value='12:00'
+                      />
+
+                      <p class='form-text text-muted'>
+                        Meeting start time.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+
+                  <div class='col'>
+                    <div class='form-group'>
+                      <label for='max'>
+                        End Time
+                      </label>
+
+                      <input
+                        type='time'
+                        id='max'
+                        class='form-control'
+                        value='13:00'
+                      />
+
+                      <p class='form-text text-muted'>
+                        Meeting end time.
+                      </p>
+                    </div><!-- form-group -->
+                  </div><!-- col -->
+                </div><!-- row -->
+              </fieldset>
             </div><!-- card-body -->
-          </div><!-- card -->
-        </div><!-- col-md-6 -->
 
-        <div class='col-md-6'>
-          <div class='card'>
-            <div class='card-header'>
-              <b>
-                Results (<span id='num'>0</span> meetings)
-              </b>
-            </div><!-- card-header -->
+            <div class='card-footer'>
+              <div class='row'>
+                <div class='col'>
+                  <a
+                    id='ics'
+                    href='#'
+                    class='btn btn-primary btn-block'
+                    title='Download calendar as an ICS file.'
+                    download=''
+                  >
+                    Dowload ICS
+                  </a><!-- btn -->
+                </div><!-- col -->
 
-            <div class='card-header'>
-              <div class='btn-group'>
-                <a
-                  id='download'
-                  href='#'
-                  class='btn btn-primary'
-                  title='Download calendar as an ICS file.'
-                  download=''
-                >
-                  Dowload Calendar
-                </a><!-- btn -->
-              </div><!-- btn-group -->
-            </div><!-- card-header -->
+                <div class='col'>
+                  <a
+                    id='csv'
+                    href='#'
+                    class='btn btn-primary btn-block'
+                    title='Download calendar as a CSV file.'
+                    download=''
+                  >
+                    Dowload CSV
+                  </a><!-- btn -->
+                </div><!-- col -->
 
-            <ul id='l' class='list-group'>
-            </ul><!-- list-group -->
+                <div class='col'>
+                  <a
+                    class='btn btn-outline-secondary btn-block disabled'
+                    title='Total meeting count'
+                    disabled
+                  >
+                    <span id='num'>0</span> meetings
+                  </a><!-- btn -->
+                </div><!-- col -->
+              </div><!-- row -->
+            </div><!-- card-footer -->
           </div><!-- card -->
         </div><!-- col-md-6 -->
       </div><!-- row -->

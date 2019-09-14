@@ -1,6 +1,34 @@
 (function() {
   "use strict";
 
+  var Times = (function() {
+    function make_date(date, time) {
+      var r = new Date(date + 'T' + time + ':00Z');
+      return r;
+    }
+
+    function step(date, freq) {
+      var r = new Date(date.getTime() + (+freq * 1000));
+      return r;
+    }
+
+    function make(date, time_min, time_max, freq) {
+      var r = [],
+          min = make_date(date, time_min),
+          max = make_date(date, time_max);
+
+      for (var t = min; t < max; t = step(t, freq)) {
+        r.push({ min: t, max: step(t, +freq - 1) });
+      }
+
+      return r;
+    }
+
+    return {
+      make: make,
+    };
+  })();
+
   var ICS = (function() {
     function make_time(d) {
       return d.toISOString().replace(/[:-]/g, '');
@@ -45,38 +73,35 @@
     };
   })();
 
-  var Times = (function() {
-    function make_date(date, time) {
-      var r = new Date(date + 'T' + time + ':00Z');
-      return r;
-    }
+  /**
+   * delay: Return a function that is delayed for the given number of
+   * milliseconds.
+   * 
+   * Note: the timeout will reset if the function is called within the
+   * delay interval.
+   */
+  function delay(time, fn) {
+    var timeout = null;
 
-    function step(date, freq) {
-      var r = new Date(date.getTime() + (+freq * 1000));
-      return r;
-    }
-
-    function make(date, time_min, time_max, freq) {
-      var r = [],
-          min = make_date(date, time_min),
-          max = make_date(date, time_max);
-
-      for (var t = min; t < max; t = step(t, freq)) {
-        r.push({ min: t, max: step(t, +freq - 1) });
+    return function() {
+      if (timeout !== null) {
+        // clear existing timeout
+        clearTimeout(timeout);
       }
 
-      return r;
-    }
-
-    return {
-      make: make,
+      // set new timeout
+      timeout = setTimeout(function() {
+        fn();
+      }, time);
     };
-  })();
+  }
 
   document.addEventListener('DOMContentLoaded', function() {
-    var INPUTS = document.querySelectorAll('input'),
-        btn = document.getElementById('download'),
-        num = document.getElementById('num');
+    var INPUTS = document.querySelectorAll('input, select'),
+        ELS = ['num', 'ics', 'csv', 'freq'].reduce(function(r, id) {
+          r[id] = document.getElementById(id);
+          return r;
+        }, {});
 
     function get_data() {
       return Array.prototype.reduce.call(INPUTS, function(r, el) {
@@ -85,38 +110,29 @@
       }, {});
     }
 
-    var timeout = null;
+    var refresh = delay(100, function() {
+      // reset output
+      ELS.num.innerHTML = '0';
 
-    function refresh() {
-      if (timeout !== null) {
-        // clear existing timeout
-        clearTimeout(timeout);
+      // get input parameters
+      var data = get_data();
+
+      // check inputs
+      if (!data.min || !data.max || !data.freq) {
+        return;
       }
 
-      // set new timeout
-      timeout = setTimeout(function() {
-        // reset output
-        num.innerHTML = '0';
+      // make time range
+      var times = Times.make(data.date, data.min, data.max, data.freq);
 
-        // get input parameters
-        var data = get_data();
+      // refresh meeting length and meeting count
+      ELS.num.innerHTML = times.length;
 
-        // check inputs
-        if (!data.min || !data.max || !data.freq) {
-          return;
-        }
-
-        // make time range
-        var times = Times.make(data.date, data.min, data.max, data.freq);
-
-        // refresh meeting count
-        num.innerHTML = times.length;
-
-        // set calendar download button
-        btn.download = data.summary + '.ics';
-        btn.href = 'data:text/calendar;base64,' + btoa(ICS.make(data, times));
-      }, 100);
-    }
+      // set calendar download button
+      var ics = ICS.make(data, times);
+      ELS.ics.download = data.summary + '.ics';
+      ELS.ics.href = 'data:text/calendar;base64,' + btoa(ics);
+    });
 
     // add event listeners
     Array.prototype.forEach.call(INPUTS, function(el) {
@@ -128,5 +144,7 @@
     var today = (new Date()).toISOString().replace(/T.*$/, '');
     document.getElementById('date').value = today;
     document.getElementById('summary').focus();
+
+    refresh();
   }, false);
 })();

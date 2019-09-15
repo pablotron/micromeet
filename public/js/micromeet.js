@@ -152,6 +152,38 @@
           make: make,
         };
       })(),
+
+      HTML: (function() {
+        function t(d) {
+          return [
+            d.getHours(),
+            d.getMinutes(),
+            d.getSeconds(),
+          ].map(function(n) {
+            return (n < 10) ? ('0' + n) : n;
+          }).join(':');
+        }
+
+        function h(s) {
+          return ('' + (s || '')).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        return {
+          make: function(data, evs) {
+            return evs.map(function(ev) {
+              return '<tr>' + ([
+                t(ev.min),
+                t(ev.max),
+                ev.summary,
+                ev.description,
+              ].map(function(v) {
+                return '<td>' + h(v) + '</td>';
+              })).join('') + '</tr>';
+            }).join('');
+          },
+        };
+      })(),
+
     },
 
     /**
@@ -201,6 +233,10 @@
       return (data.min && data.max && data.freq);
     },
 
+    on: function(el, ev, fn, b) {
+      return el.addEventListener(ev, fn, b || false);
+    },
+
     /**
      * used to build map of keys to node lists.
      */
@@ -223,25 +259,24 @@
   };
 
   // cached data (used by download button click handlers)
-  var CACHE = {};
+  var D = document, CACHE = {};
 
-  document.addEventListener('DOMContentLoaded', function() {
+  MM.on(D, 'DOMContentLoaded', function() {
     // build element map
     var ELS = MM.ELS.reduce(function(r, row) {
-      r[row.id] = document.querySelectorAll(row.css);
+      r[row.id] = D.querySelectorAll(row.css);
       return r;
-    }, { fields: document.querySelectorAll('input, select') });
+    }, { fields: D.querySelectorAll('input, select') });
 
     // enable/disable download buttons
     function set_btns(enabled) {
-      // disable download buttons
+      // toggle buttons
       MM.each(ELS.btns, function(el) {
+        el.disabled = !enabled;
         if (enabled) {
           el.classList.remove('disabled');
-          el.disabled = false;
         } else {
           el.classList.add('disabled');
-          el.disabled = true;
         }
       });
     }
@@ -293,14 +328,14 @@
 
     // add event handlers to all fields
     MM.each(ELS.fields, function(el) {
-      el.addEventListener('change', refresh, false);
-      el.addEventListener('keydown', refresh, false);
+      MM.on(el, 'change', refresh);
+      MM.on(el, 'keydown', refresh);
     });
 
     // add ics btn event handlers
     MM.each(ELS.ics, function(el) {
-      el.addEventListener('click', function() {
-        // set calendar download button
+      MM.on(el, 'click', function() {
+        // render ics
         var ics = btoa(MM.Views.ICS.make(CACHE.data, CACHE.evs));
         el.href = 'data:text/calendar;base64,' + ics;
       });
@@ -308,26 +343,27 @@
 
     // add csv btn event handlers
     MM.each(ELS.csv, function(el) {
-      el.addEventListener('click', function() {
+      MM.on(el, 'click', function() {
+        // render csv
         var csv = btoa(MM.Views.CSV.make(CACHE.data, CACHE.evs));
         el.href = 'data:text/csv;base64,' + csv;
       });
     });
 
-    // add view button event handlers
-    MM.each(ELS.view, function(el) {
-      el.addEventListener('click', function() {
-        alert("Eventually this button will show your micromeetings, but it's not done yet. Stay tuned!");
-        return false;
-      });
+    // add view dialog event handlers
+    $('#view-dialog').on('show.bs.modal', function() {
+      console.log('render html');
+      // render html
+      var html = MM.Views.HTML.make(CACHE.data, CACHE.evs);
+      $('#view-rows').html(html);
     });
 
     // focus summary
     var today = (new Date()).toISOString().replace(/T.*$/, '');
-    document.getElementById('date').value = today;
-    document.getElementById('summary').focus();
+    D.getElementById('date').value = today;
+    D.getElementById('summary').focus();
 
     // trigger initial refresh
     refresh();
-  }, false);
+  });
 })();

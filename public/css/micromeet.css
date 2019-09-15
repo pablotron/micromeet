@@ -1,0 +1,8 @@
+#view-dialog .modal-body {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+#view-dialog th, td {
+  white-space: nowrap;
+}

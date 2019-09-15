@@ -9,6 +9,7 @@
     </title>
     <link rel='stylesheet' type='text/css' href='css/font-awesome-4.7.0/css/font-awesome.min.css'/>
     <link rel='stylesheet' type='text/css' href='js/bootstrap-4.3.1/css/bootstrap.min.css'/>
+    <link rel='stylesheet' type='text/css' href='css/micromeet.css'/>
   </head>
 
   <body>
@@ -175,6 +176,8 @@
                       <a
                         class='btn btn-outline-success btn-block view-btn'
                         title='Total meeting count'
+                        data-toggle='modal'
+                        data-target='#view-dialog'
                       >
                         <span class='num-meetings'>0</span> Meetings
                       </a><!-- btn -->
@@ -275,6 +278,8 @@
                       <a
                         class='btn btn-outline-success btn-block view-btn'
                         title='Total meeting count'
+                        data-toggle='modal'
+                        data-target='#view-dialog'
                       >
                         <span class='num-meetings'>0</span> Meetings
                       </a><!-- btn -->
@@ -389,6 +394,8 @@
                       <a
                         class='btn btn-outline-success btn-block view-btn'
                         title='Total meeting count'
+                        data-toggle='modal'
+                        data-target='#view-dialog'
                       >
                         <span class='num-meetings'>0</span> Meetings
                       </a><!-- btn -->
@@ -431,6 +438,68 @@
         </div><!-- col-md-6 -->
       </div><!-- row -->
     </div><!-- container -->
+
+    <div
+      id='view-dialog'
+      class='modal fade'
+      tabindex='-1'
+      role='dialog'
+      aria-labelledby='view-dialog-title'
+      aria-hidden='true'
+    >
+      <div class='modal-dialog modal-lg' role='document'>
+        <div class='modal-content'>
+          <div class='modal-header'>
+            <h5
+              id='view-dialog-title'
+              class='modal-title'
+            >
+              <i class='fa fa-fw fa-calendar'></i>
+              View Meetings
+            </h5><!-- modal-title -->
+
+            <button
+              type='button'
+              class='close'
+              title='Close this dialog.'
+              data-dismiss='modal'
+              aria-label='Close'
+            >
+              <span aria-hidden='true'>&times;</span>
+            </button><!-- close -->
+          </div><!-- modal-header -->
+
+          <div
+            class='modal-body'
+            style='max-height: 50vh; overflow: auto'
+          >
+            <table class='table table-sm table-striped table-hover'>
+              <thead>
+                <tr>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Summary</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+
+              <tbody id='view-rows'>
+              </tbody>
+            </table><!-- table -->
+          </div><!-- modal-body -->
+          <div class='modal-footer'>
+            <button
+              type='button'
+              class='btn btn-secondary'
+              title='Close this dialog.'
+              data-dismiss='modal'
+            >
+              &times; Close
+            </button><!-- btn -->
+          </div><!-- modal-footer -->
+        </div><!-- modal-content -->
+      </div><!-- modal-dialog -->
+    </div><!-- modal -->
 
     <script type='text/javascript' src='js/jquery-3.4.1.min.js'></script>
     <script type='text/javascript' src='js/bootstrap-4.3.1/js/bootstrap.bundle.min.js'></script>

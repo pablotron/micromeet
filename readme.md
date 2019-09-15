@@ -1,4 +1,4 @@
-# micromeet readme
+# micromeet
 
 **What is this madness?**
 

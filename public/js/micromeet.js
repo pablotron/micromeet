@@ -208,8 +208,11 @@
       id:   'num',
       css:  '.num-meetings',
     }, {
-      id:   'download',
-      css:  '.download-btn',
+      id:   'btns',
+      css:  '.download-btn, .view-btn',
+    }, {
+      id:   'view',
+      css:  '.view-btn',
     }, {
       id:   'ics',
       css:  '.download-btn[data-type="ics"]',
@@ -232,7 +235,7 @@
     // enable/disable download buttons
     function set_btns(enabled) {
       // disable download buttons
-      MM.each(ELS.download, function(el) {
+      MM.each(ELS.btns, function(el) {
         if (enabled) {
           el.classList.remove('disabled');
           el.disabled = false;
@@ -250,7 +253,7 @@
         el.innerHTML = '0';
       });
 
-      // disable download buttons
+      // disable buttons
       set_btns(false);
     }
 
@@ -308,6 +311,14 @@
       el.addEventListener('click', function() {
         var csv = btoa(MM.Views.CSV.make(CACHE.data, CACHE.evs));
         el.href = 'data:text/csv;base64,' + csv;
+      });
+    });
+
+    // add view button event handlers
+    MM.each(ELS.view, function(el) {
+      el.addEventListener('click', function() {
+        alert("Eventually this button will show your micromeetings, but it's not done yet. Stay tuned!");
+        return false;
       });
     });
 

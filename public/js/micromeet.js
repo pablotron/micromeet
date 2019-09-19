@@ -7,8 +7,6 @@
      * event list namespace
      */
     Events: (function() {
-      var TZ_OFS = (new Date()).getTimezoneOffset();
-
       function make_date(date, time) {
         var r = new Date(date + 'T' + time + ':00');
         return r;
@@ -19,32 +17,30 @@
         return r;
       }
 
-      function summarize(summary, num, max) {
+      function title(summary, num, max) {
         return summary + ' (' + num + '/' + max + ')';
-      }
-
-      function make(data) {
-        var r = [],
-            min = make_date(data.date, data.min),
-            max = make_date(data.date, data.max);
-
-        for (var t = min; t < max; t = step(t, data.freq)) {
-          r.push({
-            min: t,
-            max: step(t, +data.freq - 1)
-          });
-        }
-
-        return r.map(function(row, i) {
-          row.summary = summarize(data.summary, (i + 1), r.length);
-          row.description = summarize(data.description, (i + 1), r.length);
-          return row;
-        });
       }
 
       // expose public interface
       return {
-        make: make,
+        make: function(data) {
+          var r = [],
+              min = make_date(data.date, data.min),
+              max = make_date(data.date, data.max);
+
+          for (var t = min; t < max; t = step(t, data.freq)) {
+            r.push({
+              min: t,
+              max: step(t, +data.freq - 1)
+            });
+          }
+
+          return r.map(function(row, i) {
+            row.summary = title(data.summary, (i + 1), r.length);
+            row.description = title(data.description, (i + 1), r.length);
+            return row;
+          });
+        },
       };
     })(),
 
@@ -56,45 +52,33 @@
        * csv renderer
        */
       CSV: (function() {
-        var HEADER = [
-          'start time',
-          'end time',
-          'summary',
-          'description',
-          'organizer name',
-          'organizer email',
-        ];
-
         function quote(s) {
           return '"' + (s || '').replace(/"/g, '""') + '"';
         }
 
-        function add_event(rows, data, ev) {
-          rows.push([
-            ev.min,
-            ev.max,
-            quote(ev.summary),
-            quote(ev.description),
-            quote(data.name),
-            quote(data.email),
-          ].join(','));
-        }
-
-        function make(data, evs) {
-          // header
-          var rows = [].concat(HEADER.join(','));
-
-          // append events
-          for (var i = 0; i < evs.length; i++) {
-            add_event(rows, data, evs[i]);
-          }
-
-          // build/return result
-          return rows.join("\n");
-        }
-
         return {
-          make: make,
+          make: function(data, evs) {
+            var name = quote(data.name),
+                email = quote(data.email);
+
+            return [[
+              'start',
+              'end',
+              'summary',
+              'description',
+              'organizer name',
+              'organizer email',
+            ].join(',')].concat(evs.map(function(ev) {
+              return [
+                ev.min,
+                ev.max,
+                quote(ev.summary),
+                quote(ev.description),
+                name,
+                email,
+              ].join(',');
+            })).join("\n");
+          },
         };
       })(),
 
@@ -102,57 +86,40 @@
        * ics renderer
        */
       ICS: (function() {
-        var HEADER = [
-          'BEGIN:VCALENDAR',
-          'VERSION:2.0',
-          'PRODID:-//pmdn/micromeet//NONSGML v1.0//EN',
-        ];
-
-        var FOOTER = [
-          'END:VCALENDAR',
-        ];
-
         function make_time(d) {
           // convert to short iso8601 date format
           return d.toISOString().replace(/:|-|\.\d{3}/g, '');
         }
 
-        function add_event(rows, data, ev) {
-          rows.push(
-            'BEGIN:VEVENT',
-            'UID:uid-' + make_time(ev.min) + '@micromeet.pmdn.org',
-            'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
-            'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
-            'DTSTART:' + make_time(ev.min),
-            'DTEND:' + make_time(ev.max),
-            'SUMMARY:' + ev.summary,
-            'DESCRIPTION:' + ev.description,
-            'SEQUENCE:1',
-            'END:VEVENT'
-          );
-        }
-
-        function make(data, evs) {
-          // header
-          var rows = [].concat(HEADER);
-
-          // append events
-          for (var i = 0; i < evs.length; i++) {
-            add_event(rows, data, evs[i]);
-          }
-
-          // append footer
-          rows = rows.concat(FOOTER);
-
-          // build/return result
-          return rows.join("\n");
-        }
-
         return {
-          make: make,
+          make: function(data, evs) {
+            return [
+              'BEGIN:VCALENDAR',
+              'VERSION:2.0',
+              'PRODID:-//pmdn/micromeet//NONSGML v1.0//EN',
+            ].concat(evs.map(function(ev) {
+              return [
+                'BEGIN:VEVENT',
+                'UID:uid-' + make_time(ev.min) + '@micromeet.pmdn.org',
+                'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
+                'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
+                'DTSTART:' + make_time(ev.min),
+                'DTEND:' + make_time(ev.max),
+                'SUMMARY:' + ev.summary,
+                'DESCRIPTION:' + ev.description,
+                'SEQUENCE:1',
+                'END:VEVENT'
+              ].join("\n");
+            })).concat([
+              'END:VCALENDAR',
+            ]).join("\n");
+          },
         };
       })(),
 
+      /**
+       * html renderer
+       */
       HTML: (function() {
         function t(d) {
           return [
@@ -233,14 +200,24 @@
       return (data.min && data.max && data.freq);
     },
 
+    /**
+     * add event handler.
+     */
     on: function(el, ev, fn, b) {
       return el.addEventListener(ev, fn, b || false);
     },
 
     /**
+     * set href of element to base64-encoded data of given type.
+     */
+    b64: function(el, type, data) {
+      el.href = 'data:text/' + type + ';base64,' + btoa(data);
+    },
+
+    /**
      * used to build map of keys to node lists.
      */
-    ELS: [{
+    E: [{
       id:   'num',
       css:  '.num-meetings',
     }, {
@@ -256,14 +233,24 @@
       id:   'csv',
       css:  '.download-btn[data-type="csv"]',
     }],
+
+    DLS: [{
+      ext:  'ics',
+      type: 'calendar',
+      view: 'ICS',
+    }, {
+      ext:  'csv',
+      type: 'csv',
+      view: 'CSV'
+    }],
   };
 
   // cached data (used by download button click handlers)
-  var D = document, CACHE = {};
+  var D = document, C = {};
 
   MM.on(D, 'DOMContentLoaded', function() {
     // build element map
-    var ELS = MM.ELS.reduce(function(r, row) {
+    var E = MM.E.reduce(function(r, row) {
       r[row.id] = D.querySelectorAll(row.css);
       return r;
     }, { fields: D.querySelectorAll('input, select') });
@@ -271,7 +258,7 @@
     // enable/disable download buttons
     function set_btns(enabled) {
       // toggle buttons
-      MM.each(ELS.btns, function(el) {
+      MM.each(E.btns, function(el) {
         el.disabled = !enabled;
         if (enabled) {
           el.classList.remove('disabled');
@@ -284,12 +271,19 @@
     // reset state
     function reset() {
       // reset output
-      MM.each(ELS.num, function(el) {
+      MM.each(E.num, function(el) {
         el.innerHTML = '0';
       });
 
       // disable buttons
       set_btns(false);
+    }
+
+    /**
+     * render and return given view.
+     */
+    function view(id) {
+      return MM.Views[id].make(C.data, C.evs);
     }
 
     // refresh handler (called by input change/keydown handlers)
@@ -298,7 +292,7 @@
       reset();
 
       // get input data and validate it
-      var data = MM.get_data(ELS.fields);
+      var data = MM.get_data(E.fields);
       if (!MM.is_valid(data)) {
         return;
       }
@@ -307,60 +301,48 @@
       set_btns(true);
 
       // cache data, build array of events
-      CACHE.data = data;
-      CACHE.evs = MM.Events.make(data);
+      C.data = data;
+      C.evs = MM.Events.make(data);
 
       // refresh meeting count
-      MM.each(ELS.num, function(el) {
-        el.innerHTML = CACHE.evs.length;
+      MM.each(E.num, function(el) {
+        el.innerHTML = C.evs.length;
       });
 
-      // set ics btn download names
-      MM.each(ELS.ics, function(el) {
-        el.download = data.summary + '.ics';
-      });
-
-      // set csv btn download names
-      MM.each(ELS.csv, function(el) {
-        el.download = data.summary + '.csv';
+      // set download names
+      MM.each(MM.DLS, function(dl) {
+        MM.each(E[dl.ext], function(el) {
+          el.download = data.summary + '.' + dl.ext;
+        });
       });
     });
 
     // add event handlers to all fields
-    MM.each(ELS.fields, function(el) {
+    MM.each(E.fields, function(el) {
       MM.on(el, 'change', refresh);
       MM.on(el, 'keydown', refresh);
     });
 
-    // add ics btn event handlers
-    MM.each(ELS.ics, function(el) {
-      MM.on(el, 'click', function() {
-        // render ics
-        var ics = btoa(MM.Views.ICS.make(CACHE.data, CACHE.evs));
-        el.href = 'data:text/calendar;base64,' + ics;
-      });
-    });
-
-    // add csv btn event handlers
-    MM.each(ELS.csv, function(el) {
-      MM.on(el, 'click', function() {
-        // render csv
-        var csv = btoa(MM.Views.CSV.make(CACHE.data, CACHE.evs));
-        el.href = 'data:text/csv;base64,' + csv;
+    // add download button click handlers
+    MM.each(MM.DLS, function(dl) {
+      MM.each(E[dl.ext], function(el) {
+        MM.on(el, 'click', function() {
+          MM.b64(el, dl.type, view(dl.view));
+        });
       });
     });
 
     // add view dialog event handlers
     $('#view-dialog').on('show.bs.modal', function() {
-      console.log('render html');
       // render html
-      var html = MM.Views.HTML.make(CACHE.data, CACHE.evs);
-      $('#view-rows').html(html);
+      $('#view-rows').html(view('HTML'));
     });
 
-    // focus summary
+    // set to current date
     var today = (new Date()).toISOString().replace(/T.*$/, '');
     D.getElementById('date').value = today;
+
+    // focus summary
     D.getElementById('summary').focus();
 
     // trigger initial refresh

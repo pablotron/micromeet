@@ -4,123 +4,123 @@
   // micromeet namespace
   var MM = {
     /**
-     * event list namespace
+     * event list generator
      */
-    Events: (function() {
+    get_events: (function() {
+      // create a new date object in local time from given date and time
+      // strings
       function make_date(date, time) {
-        var r = new Date(date + 'T' + time + ':00');
-        return r;
+        return (new Date(date + 'T' + time + ':00'));
       }
 
+      // advance date given number of seconds
       function step(date, freq) {
-        var r = new Date(date.getTime() + (+freq * 1000));
-        return r;
+        return (new Date(date.getTime() + (+freq * 1000)));
       }
 
-      function title(summary, num, max) {
-        return summary + ' (' + num + '/' + max + ')';
+      // generate title in the form "text (N/C)"
+      function title(s, num, max) {
+        return s + ' (' + num + '/' + max + ')';
       }
 
       // expose public interface
-      return {
-        make: function(data) {
-          var r = [],
-              min = make_date(data.date, data.min),
-              max = make_date(data.date, data.max);
+      return function(data) {
+        var r = [],
+            min = make_date(data.date, data.min),
+            max = make_date(data.date, data.max);
 
-          for (var t = min; t < max; t = step(t, data.freq)) {
-            r.push({
-              min: t,
-              max: step(t, +data.freq - 1)
-            });
-          }
-
-          return r.map(function(row, i) {
-            row.summary = title(data.summary, (i + 1), r.length);
-            row.description = title(data.description, (i + 1), r.length);
-            return row;
+        for (var t = min; t < max; t = step(t, data.freq)) {
+          r.push({
+            min: t,
+            max: step(t, +data.freq - 1)
           });
-        },
+        }
+
+        return r.map(function(row, i) {
+          var n = (i + 1), l = r.length;
+
+          row.summary = title(data.summary, n, l);
+          row.description = title(data.description, n, l);
+
+          return row;
+        });
       };
     })(),
 
     /**
-     * rendering view namespace
+     * renderers (views)
      */
     Views: {
       /**
        * csv renderer
        */
-      CSV: (function() {
-        function quote(s) {
+      csv: (function() {
+        // quote and escape string
+        function Q(s) {
           return '"' + (s || '').replace(/"/g, '""') + '"';
         }
 
-        return {
-          make: function(data, evs) {
-            var name = quote(data.name),
-                email = quote(data.email);
+        return function(data, evs) {
+          // quote and escape name and email
+          var name = Q(data.name),
+              email = Q(data.email);
 
-            return [[
-              'start',
-              'end',
-              'summary',
-              'description',
-              'organizer name',
-              'organizer email',
-            ].join(',')].concat(evs.map(function(ev) {
-              return [
-                ev.min,
-                ev.max,
-                quote(ev.summary),
-                quote(ev.description),
-                name,
-                email,
-              ].join(',');
-            })).join("\n");
-          },
+          return [[
+            'start',
+            'end',
+            'summary',
+            'description',
+            'organizer name',
+            'organizer email',
+          ].join(',')].concat(evs.map(function(ev) {
+            return [
+              ev.min,
+              ev.max,
+              Q(ev.summary),
+              Q(ev.description),
+              name,
+              email,
+            ].join(',');
+          })).join("\n");
         };
       })(),
 
       /**
        * ics renderer
        */
-      ICS: (function() {
-        function make_time(d) {
-          // convert to short iso8601 date format
+      ics: (function() {
+        // convert to short iso8601 date format
+        function T(d) {
           return d.toISOString().replace(/:|-|\.\d{3}/g, '');
         }
 
-        return {
-          make: function(data, evs) {
+        return function(data, evs) {
+          return [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//pmdn/micromeet//NONSGML v1.0//EN',
+          ].concat(evs.map(function(ev) {
             return [
-              'BEGIN:VCALENDAR',
-              'VERSION:2.0',
-              'PRODID:-//pmdn/micromeet//NONSGML v1.0//EN',
-            ].concat(evs.map(function(ev) {
-              return [
-                'BEGIN:VEVENT',
-                'UID:uid-' + make_time(ev.min) + '@micromeet.pmdn.org',
-                'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
-                'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
-                'DTSTART:' + make_time(ev.min),
-                'DTEND:' + make_time(ev.max),
-                'SUMMARY:' + ev.summary,
-                'DESCRIPTION:' + ev.description,
-                'SEQUENCE:1',
-                'END:VEVENT'
-              ].join("\n");
-            })).concat([
-              'END:VCALENDAR',
-            ]).join("\n");
-          },
+              'BEGIN:VEVENT',
+              'UID:uid-' + T(ev.min) + '@micromeet.pmdn.org',
+              'ORGANIZER;CN=' + data.name + ':MAILTO:' + data.email,
+              'DTSTART:' + T(ev.min),
+              'DTEND:' + T(ev.max),
+              'SUMMARY:' + ev.summary,
+              'DESCRIPTION:' + ev.description,
+              'SEQUENCE:1',
+              'END:VEVENT'
+            ].join("\n");
+          })).concat([
+            'END:VCALENDAR',
+          ]).join("\n");
         };
       })(),
 
       /**
        * html renderer
        */
-      HTML: (function() {
+      html: (function() {
         function t(d) {
           return [
             d.getHours(),
@@ -135,22 +135,19 @@
           return ('' + (s || '')).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        return {
-          make: function(data, evs) {
-            return evs.map(function(ev) {
-              return '<tr>' + ([
-                t(ev.min),
-                t(ev.max),
-                ev.summary,
-                ev.description,
-              ].map(function(v) {
-                return '<td>' + h(v) + '</td>';
-              })).join('') + '</tr>';
-            }).join('');
-          },
+        return function(data, evs) {
+          return evs.map(function(ev) {
+            return '<tr>' + ([
+              t(ev.min),
+              t(ev.max),
+              ev.summary,
+              ev.description,
+            ].map(function(v) {
+              return '<td>' + h(v) + '</td>';
+            })).join('') + '</tr>';
+          }).join('');
         };
       })(),
-
     },
 
     /**
@@ -234,14 +231,15 @@
       css:  '.download-btn[data-type="csv"]',
     }],
 
+    /**
+     * downloads: used to generate download content.
+     */
     DLS: [{
       ext:  'ics',
       type: 'calendar',
-      view: 'ICS',
     }, {
       ext:  'csv',
       type: 'csv',
-      view: 'CSV'
     }],
   };
 
@@ -260,11 +258,7 @@
       // toggle buttons
       MM.each(E.btns, function(el) {
         el.disabled = !enabled;
-        if (enabled) {
-          el.classList.remove('disabled');
-        } else {
-          el.classList.add('disabled');
-        }
+        el.classList.toggle('disabled', !enabled);
       });
     }
 
@@ -283,7 +277,7 @@
      * render and return given view.
      */
     function view(id) {
-      return MM.Views[id].make(C.data, C.evs);
+      return MM.Views[id](C.data, C.evs);
     }
 
     // refresh handler (called by input change/keydown handlers)
@@ -302,7 +296,7 @@
 
       // cache data, build array of events
       C.data = data;
-      C.evs = MM.Events.make(data);
+      C.evs = MM.get_events(data);
 
       // refresh meeting count
       MM.each(E.num, function(el) {
@@ -327,7 +321,7 @@
     MM.each(MM.DLS, function(dl) {
       MM.each(E[dl.ext], function(el) {
         MM.on(el, 'click', function() {
-          MM.b64(el, dl.type, view(dl.view));
+          MM.b64(el, dl.type, view(dl.ext));
         });
       });
     });
@@ -335,7 +329,7 @@
     // add view dialog event handlers
     $('#view-dialog').on('show.bs.modal', function() {
       // render html
-      $('#view-rows').html(view('HTML'));
+      $('#view-rows').html(view('html'));
     });
 
     // set to current date
